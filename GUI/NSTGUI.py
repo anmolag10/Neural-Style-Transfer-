@@ -3,6 +3,7 @@ from tkinter.constants import CENTER, FLAT, RIDGE
 from tkinter.font import BOLD
 from PIL import ImageTk, Image
 import os, os.path
+import socket
 
 
 class Gui:
@@ -17,10 +18,13 @@ class Gui:
         self.bottom.pack(side="bottom")
         self.index = 0
         self.ImageList = []
+        self.ImageStyle=[]
+        self.ImageContent=[]
         self.mainScreen()
-        self.imageExtracter(self.ImageList,"C:\\Users\\agarw\\OneDrive\\Desktop\\NST GUI\\StyleImage")
+        self.imageExtracter(self.ImageStyle,"C:\\Users\\agarw\\OneDrive\\Desktop\\NST GUI\\StyleImage")
+        self.imageExtracter(self.ImageContent,"C:\\Users\\agarw\\OneDrive\\Desktop\\NST GUI\\ContentImage")
     def imageExtracter(self,list,path):
-        vaild_images =[".jpg",".gif",".png",".tga"]
+        vaild_images =[".jpeg",".gif",".png",".tga",".jpg"]
 
         for f in os.listdir(path):
             ext = os.path.splitext(f)[1]
@@ -31,7 +35,7 @@ class Gui:
 
 
     def styleDisplay(self):
-        path = self.ImageList[0]
+        path = self.ImageStyle[0]
         img = ImageTk.PhotoImage(Image.open(path).resize((450, 350)))
         panel = tk.Label(self.window, image=img)
         contentPicture = tk.Label(
@@ -41,18 +45,18 @@ class Gui:
                             expand="yes", padx=0, pady=0)
         panel.pack(side="top", expand="yes")
         self.backbuttonrender(panel)
-        self.prevbuttonrender(panel)
-        self.nextbuttonrender(panel)
+        self.prevbuttonrender(panel,self.ImageStyle)
+        self.nextbuttonrender(panel,self.ImageStyle)
         self.submitbuttonrenderStyle(panel)
 
-    def nextbuttonrender(self, panel):
+    def nextbuttonrender(self, panel,Image):
         next_button = tk.Button(self.window, text="Next >>", font=(
-            "Hevlatica", 10, BOLD), background="#EC255A", fg="white", justify=CENTER, relief=RIDGE, width=10, height=1, command=lambda: self.next(panel))
+            "Hevlatica", 10, BOLD), background="#EC255A", fg="white", justify=CENTER, relief=RIDGE, width=10, height=1, command=lambda: self.next(panel,Image))
         next_button.pack(in_=self.bottom, side="right")
 
-    def prevbuttonrender(self, panel):
+    def prevbuttonrender(self, panel,Image):
         prev_button = tk.Button(self.window, text=" << Previous",  font=(
-            "Hevlatica", 10, BOLD), background="#EC255A", fg="white", justify=CENTER, relief=RIDGE, width=10, height=1, command=lambda: self.prev(panel))
+            "Hevlatica", 10, BOLD), background="#EC255A", fg="white", justify=CENTER, relief=RIDGE, width=10, height=1, command=lambda: self.prev(panel,Image))
         prev_button.pack(in_=self.bottom, side="left")
 
     def submitbuttonrenderStyle(self, panel):
@@ -76,7 +80,7 @@ class Gui:
         back_button.pack(in_=self.bottom, side="left")
 
     def contentDisplay(self):
-        path = self.ImageList[0]
+        path = self.ImageContent[0]
         print(path)
         img = ImageTk.PhotoImage(Image.open(path).resize((450, 350)))
         panel = tk.Label(self.window, image=img)
@@ -86,8 +90,8 @@ class Gui:
         contentPicture.pack(side="top", fill="both",
                             expand="yes", padx=0, pady=0)
         panel.pack(side="top", expand="yes")
-        self.prevbuttonrender(panel)
-        self.nextbuttonrender(panel)
+        self.prevbuttonrender(panel,self.ImageContent)
+        self.nextbuttonrender(panel,self.ImageContent)
         self.submitbuttonrenderContent(panel)
 
     def contentDisplayWraper(self):
@@ -99,24 +103,24 @@ class Gui:
         self.bottom.pack(side="bottom")
         self.contentDisplay()
 
-    def next(self, panel):
-        print(self.ImageList[self.index])
+    def next(self, panel,image):
+        print(image[self.index])
         img = ImageTk.PhotoImage(Image.open(
-            self.ImageList[self.index]).resize((450, 350)))
+            image[self.index]).resize((450, 350)))
         panel.configure(image=img)
         panel.image = img
         print(self.index)
         self.index += 1
-        self.index %= len(self.ImageList)
+        self.index %= len(image)
 
-    def prev(self, panel):
+    def prev(self, panel,image):
         img = ImageTk.PhotoImage(Image.open(
-            self.ImageList[self.index]).resize((450, 350)))
+            image[self.index]).resize((450, 350)))
         panel.configure(image=img)
         panel.img = img
         print(self.index)
         self.index -= 1
-        self.index %= len(self.ImageList)
+        self.index %= len(image)
 
     def clearFrame(self):
         for w in self.window.winfo_children():
@@ -133,7 +137,23 @@ class Gui:
         self.bottom.pack(side="bottom")
         self.styleDisplay()
         print(self.input)
+        self.sendToNeuralScript(self.input)
 
+    def sendToNeuralScript(self,input):
+        s= socket.socket()
+        print("Socket Created")
+        port =12345
+        s.connect(("localhost",port))
+        print("Socket connected")
+        txt=str(self.ImageContent[input['Content']])+","+str(self.ImageStyle[input['Style']])
+        s.send(str(txt).encode())
+        print("Output Sent")
+
+
+
+
+
+    
     def submitContent(self, panel, index):
         print("Selected Image:"+str(index))
         self.input.update({"Content": index})
