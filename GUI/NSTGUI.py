@@ -7,6 +7,11 @@ import socket
 
 
 class Gui:
+    
+    # __init__():
+    # Parameters : Takes a oject of Tkinter Window
+    # Return : N.A
+    #
 
     def __init__(self, w):
         self.window = w
